@@ -1,14 +1,15 @@
 package main
 
 import (
+	"crypto/md5"
 	"errors"
 	"flag"
 	"fmt"
 	"github.com/scjudd/spiceworks"
-	"github.com/scjudd/spiceworks/cli/cookies"
+	"github.com/scjudd/spiceworks/cli/cookiejar"
+	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"os/user"
 	"path"
@@ -46,16 +47,19 @@ func main() {
 		log.Fatal(errors.New("-s, -e, and -p are required!"))
 	}
 
-	// BUG(scjudd): If this file exists, the provided server, email, and password
-	// are ignored. We should hash these values along with the cookiejar data and
-	// verify that they match up before short-circuiting the login process.
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
 	}
-	cookiepath := path.Join(usr.HomeDir, ".spiceworks_cookies.json")
+	jarPath := path.Join(usr.HomeDir, ".spiceworks_cookiejar.json")
 
-	jar, err := cookies.Open(cookiepath)
+	h := md5.New()
+	io.WriteString(h, server)
+	io.WriteString(h, email)
+	io.WriteString(h, password)
+	hash := fmt.Sprintf("%x", h.Sum(nil))
+
+	jar, hashMatch, err := cookiejar.Open(jarPath, hash)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -64,15 +68,7 @@ func main() {
 	baseUrl := "http://" + server + "/"
 	client := &spiceworks.Client{&http.Client{Jar: jar}, baseUrl, email, password}
 
-	// BUG(scjudd): The cookies package is extremely basic and doesn't, at present
-	// do anything to keep track of cookie expiration. This means an expired
-	// cookie will short-circuit the login process and prevent us from
-	// successfully making authenticated requests.
-	u, err := url.Parse("http://helpdesk.aacc.net/login")
-	if err != nil {
-		log.Fatal(err)
-	}
-	if len(jar.Cookies(u)) == 0 {
+	if !hashMatch {
 		err = client.Login()
 		if err != nil {
 			log.Fatal(err)
