@@ -32,16 +32,14 @@ func Open(filename, hash string) (j *Jar, hashMatch bool, err error) {
 	if _, err := os.Stat(filename); err == nil {
 		b, err := ioutil.ReadFile(filename)
 		if err != nil {
-			return nil, hashMatch, err
+			return nil, false, err
 		}
 
 		if err = json.Unmarshal(b, f); err != nil {
-			return nil, hashMatch, err
+			return nil, false, err
 		}
 
-		if f.Hash == hash {
-			hashMatch = true
-		}
+		hashMatch = hash == f.Hash
 	}
 
 	j = &Jar{
