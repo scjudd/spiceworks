@@ -22,7 +22,7 @@ type Ticket struct {
 // specified, only the tickets which pass the filter condition are returned.
 //
 // Currently, the only known filter is "open".
-func (c *Client) Tickets(filter string) (tickets []Ticket, err error) {
+func (c *Client) Tickets(filter string) (tickets []*Ticket, err error) {
 	var ticketsUrl string
 	if filter == "" {
 		ticketsUrl = c.BaseUrl + "api/tickets.json"
