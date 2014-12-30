@@ -24,6 +24,15 @@ const (
 	prettySummaryTrunc = 80
 )
 
+// md5hash takes any number of strings and returns a hex MD5 hash string.
+func md5hash(strs ...string) string {
+	h := md5.New()
+	for _, s := range strs {
+		io.WriteString(h, s)
+	}
+	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
 func main() {
 	var server, email, password string
 	var pretty bool
@@ -55,12 +64,7 @@ func main() {
 	}
 	jarPath := path.Join(usr.HomeDir, ".spiceworks_cookiejar.json")
 
-	h := md5.New()
-	io.WriteString(h, server)
-	io.WriteString(h, email)
-	io.WriteString(h, password)
-	hash := fmt.Sprintf("%x", h.Sum(nil))
-
+	hash := md5hash(server, email, password)
 	jar, hashMatch, err := cookiejar.Open(jarPath, hash)
 	if err != nil {
 		log.Fatal(err)
