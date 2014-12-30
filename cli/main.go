@@ -1,9 +1,9 @@
 package main
 
 import (
+	"code.google.com/p/getopt"
 	"crypto/md5"
 	"errors"
-	"flag"
 	"fmt"
 	"github.com/scjudd/spiceworks"
 	"github.com/scjudd/spiceworks/cli/cookiejar"
@@ -45,17 +45,18 @@ func getEnvIfBlank(s, e string) string {
 func main() {
 	var server, email, password string
 	var pretty bool
-	flag.StringVar(&server, "s", "", "Spiceworks server URL, i.e., helpdesk.aacc.net")
-	flag.StringVar(&email, "e", "", "Email address to log in to Spiceworks")
-	flag.StringVar(&password, "p", "", "Password to log in to Spiceworks")
-	flag.BoolVar(&pretty, "P", false, "Prettify output: less machine-readable, more human-readable.")
-	flag.Parse()
+
+	getopt.StringVarLong(&server, "server", 's', "Spiceworks server URL, i.e., helpdesk.aacc.net")
+	getopt.StringVarLong(&email, "email", 'e', "Email address to log in to Spiceworks")
+	getopt.StringVarLong(&password, "password", 'p', "Password to log in to Spiceworks")
+	getopt.BoolVarLong(&pretty, "pretty", 'P', "Prettify output: less machine-readable, more human-readable.")
+	getopt.Parse()
 
 	server = getEnvIfBlank(server, "SPICEWORKS_SERVER")
 	email = getEnvIfBlank(email, "SPICEWORKS_EMAIL")
 	password = getEnvIfBlank(password, "SPICEWORKS_PASSWORD")
 	if server == "" || email == "" || password == "" {
-		log.Fatal(errors.New("-s, -e, and -p are required!"))
+		log.Fatal(errors.New("--server, --email, and --password are required!"))
 	}
 
 	usr, err := user.Current()
