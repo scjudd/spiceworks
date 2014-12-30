@@ -44,14 +44,21 @@ func getEnvIfBlank(s, e string) string {
 
 func main() {
 	var server, email, password string
-	var pretty bool
+	var pretty, help bool
 
 	// Parse command line flags.
 	getopt.StringVarLong(&server, "server", 's', "Spiceworks server URL, i.e., helpdesk.aacc.net")
 	getopt.StringVarLong(&email, "email", 'e', "Email address to log in to Spiceworks")
 	getopt.StringVarLong(&password, "password", 'p', "Password to log in to Spiceworks")
 	getopt.BoolVarLong(&pretty, "pretty", 'P', "Prettify output: less machine-readable, more human-readable.")
+	getopt.BoolVarLong(&help, "help", 0, "Display usage information.")
 	getopt.Parse()
+
+	// If "--help" passed, display usage information.
+	if help {
+		getopt.Usage()
+		os.Exit(0)
+	}
 
 	// If server, email, or password weren't specified on the command line, try
 	// to read them from environment variables before throwing a fatal error.
