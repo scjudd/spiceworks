@@ -33,6 +33,15 @@ func md5hash(strs ...string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
+// getEnvIfBlank returns s unless s == ""; otherwise, it returns the value of
+// the environment variable e.
+func getEnvIfBlank(s, e string) string {
+	if s == "" {
+		return os.Getenv(e)
+	}
+	return s
+}
+
 func main() {
 	var server, email, password string
 	var pretty bool
@@ -42,18 +51,9 @@ func main() {
 	flag.BoolVar(&pretty, "P", false, "Prettify output: less machine-readable, more human-readable.")
 	flag.Parse()
 
-	if server == "" {
-		server = os.Getenv("SPICEWORKS_SERVER")
-	}
-
-	if email == "" {
-		email = os.Getenv("SPICEWORKS_EMAIL")
-	}
-
-	if password == "" {
-		password = os.Getenv("SPICEWORKS_PASSWORD")
-	}
-
+	server = getEnvIfBlank(server, "SPICEWORKS_SERVER")
+	email = getEnvIfBlank(email, "SPICEWORKS_EMAIL")
+	password = getEnvIfBlank(password, "SPICEWORKS_PASSWORD")
 	if server == "" || email == "" || password == "" {
 		log.Fatal(errors.New("-s, -e, and -p are required!"))
 	}
