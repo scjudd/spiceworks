@@ -21,14 +21,16 @@ func init() {
 }
 
 const (
-	summaryTrunc = 80
+	prettySummaryTrunc = 80
 )
 
 func main() {
 	var server, email, password string
+	var pretty bool
 	flag.StringVar(&server, "s", "", "Spiceworks server URL, i.e., helpdesk.aacc.net")
 	flag.StringVar(&email, "e", "", "Email address to log in to Spiceworks")
 	flag.StringVar(&password, "p", "", "Password to log in to Spiceworks")
+	flag.BoolVar(&pretty, "P", false, "Prettify output: less machine-readable, more human-readable.")
 	flag.Parse()
 
 	if server == "" {
@@ -80,16 +82,21 @@ func main() {
 		log.Fatal(err)
 	}
 
-	w := new(tabwriter.Writer)
-	w.Init(os.Stdout, 0, 8, 2, '\t', 0)
-	fmt.Fprintln(w, "\x1b[1mID\tSUMMARY\tASSIGNEE\x1b[0m")
+	var w io.Writer = os.Stdout
+
+	if pretty {
+		w = new(tabwriter.Writer)
+		w.(*tabwriter.Writer).Init(os.Stdout, 0, 8, 2, '\t', 0)
+		fmt.Fprintln(w, "\x1b[1mID\tSUMMARY\tASSIGNEE\x1b[0m")
+	}
+
 	for _, ticket := range tickets {
 		if ticket.Assignee.FirstName == "" && ticket.Assignee.LastName == "" {
 			ticket.Assignee.FirstName = "Unassigned"
 		}
 
-		if len(ticket.Summary) > summaryTrunc-3 {
-			ticket.Summary = ticket.Summary[0:summaryTrunc-3] + "..."
+		if pretty && len(ticket.Summary) > prettySummaryTrunc-3 {
+			ticket.Summary = ticket.Summary[0:prettySummaryTrunc-3] + "..."
 		}
 
 		fmt.Fprintf(w, "%d\t%s\t%s %s\n",
@@ -99,5 +106,8 @@ func main() {
 			ticket.Assignee.LastName,
 		)
 	}
-	w.Flush()
+
+	if pretty {
+		w.(*tabwriter.Writer).Flush()
+	}
 }
