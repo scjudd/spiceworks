@@ -84,9 +84,14 @@ func main() {
 	w.Init(os.Stdout, 0, 8, 2, '\t', 0)
 	fmt.Fprintln(w, "\x1b[1mID\tSUMMARY\tASSIGNEE\x1b[0m")
 	for _, ticket := range tickets {
+		if ticket.Assignee.FirstName == "" && ticket.Assignee.LastName == "" {
+			ticket.Assignee.FirstName = "Unassigned"
+		}
+
 		if len(ticket.Summary) > summaryTrunc-3 {
 			ticket.Summary = ticket.Summary[0:summaryTrunc-3] + "..."
 		}
+
 		fmt.Fprintf(w, "%d\t%s\t%s %s\n",
 			ticket.Id,
 			ticket.Summary,
